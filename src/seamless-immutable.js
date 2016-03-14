@@ -254,7 +254,7 @@
   function asMutableArray(opts) {
     var result = [], i, length;
 
-    if(!(opts && opts.deep === false)) {
+    if(opts && opts.deep) {
       for(i = 0, length = this.length; i < length; i++) {
         result.push(asDeepMutable(this[i]));
       }
@@ -336,7 +336,7 @@
     }
 
     var receivedArray = (other instanceof Array),
-        deep          = !(config && config.deep === false),
+        deep          = config && config.deep,
         merger        = config && config.merger,
         result;
 
@@ -450,7 +450,7 @@
   function asMutableObject(opts) {
     var result = this.instantiateEmptyObject(), key;
 
-    if(!(opts && opts.deep === false)) {
+    if(opts && opts.deep) {
       for (key in this) {
         if (this.hasOwnProperty(key)) {
           result[key] = asDeepMutable(this[key]);
@@ -492,18 +492,17 @@
     return makeImmutable(obj, mutatingObjectMethods);
   }
 
-  function Immutable(obj, shallow) {
+  function Immutable(obj, options) {
+    obj = obj || {};
     if (isImmutable(obj)) {
       return obj;
     } else if (obj instanceof Array) {
-      obj = obj.slice();
-      obj.__proto__ = List.prototype;
-      return makeImmutableArray(obj);
+      return makeImmutableArray(obj.slice());
     } else if (obj instanceof Date) {
       return makeImmutableDate(new Date(obj.getTime()));
     } else {
       // Don't freeze the object we were given; make a clone and use that.
-      var prototype = Map.prototype;
+      var prototype = options && options.prototype;
       var instantiateEmptyObject =
         (!prototype || prototype === Object.prototype) ?
           instantiatePlainObject : (function() { return Object.create(prototype); });
@@ -511,25 +510,13 @@
 
       for (var key in obj) {
         if (Object.getOwnPropertyDescriptor(obj, key)) {
-          clone[key] = obj[key];
-          if (!shallow) clone[key] = Immutable(clone[key]);
+          clone[key] = Immutable(obj[key]);
         }
       }
 
       return makeImmutableObject(clone,
         {instantiateEmptyObject: instantiateEmptyObject});
     }
-  }
-
-  function Map(obj) {
-    obj = obj || {};
-    return Immutable(obj, true);
-  }
-
-  function List(obj) {
-    obj = (obj || []).slice();
-    obj.__proto__ = List.prototype;
-    return makeImmutableArray(obj);
   }
 
   // Export the library
@@ -540,8 +527,8 @@
 
   var Immutable_ = {
     fromJS: Immutable,
-    Map: Map,
-    List: List,
+    Map: Immutable,
+    List: Immutable_,
     Iterable: { isIterable: isImmutable },
     isImmutable: isImmutable,
   };
