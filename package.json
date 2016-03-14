@@ -16,7 +16,6 @@
     "mocha": "2.4.5",
     "mocha-istanbul": "0.2.0",
     "mocha-lcov-reporter": "1.2.0",
-    "underscore": "^1.8.3",
     "zuul": "3.9.0"
   },
   "scripts": {
@@ -46,5 +45,8 @@
     "validthis": true,
     "proto": true
   },
-  "homepage": "https://github.com/rtfeldman/seamless-immutable"
+  "homepage": "https://github.com/rtfeldman/seamless-immutable",
+  "dependencies": {
+    "underscore": "^1.8.3"
+  }
 }
