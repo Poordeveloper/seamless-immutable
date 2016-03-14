@@ -1,5 +1,12 @@
 (function() {
   "use strict";
+  var isEqual;
+
+  if (process.env.NODE_ENV !== "production") {
+    isEqual = require('underscore').isEqual;
+  } else {
+    isEqual = (window._ || window.AV._).isEqual;
+  }
 
   function addPropertyTo(target, methodName, value) {
     Object.defineProperty(target, methodName, {
@@ -316,6 +323,10 @@
     return dest;
   }
 
+  function mergeDeep(other) {
+    return merge.apply(this, [other, {deep: true}]);
+  }
+
   /**
    * Returns an Immutable Object containing the properties and values of both
    * this object and the provided object, prioritizing the provided object's
@@ -362,6 +373,9 @@
         } else if (deep && isMergableObject(currentValue) && isMergableObject(immutableValue)) {
           newValue = currentValue.merge(immutableValue, config);
         } else {
+          if (deep && isEqual(currentValue, immutableValue)) {
+            newValue = currentValue;
+          } else 
           newValue = immutableValue;
         }
 
@@ -488,12 +502,12 @@
     addPropertyTo(obj, "getIn", arrayGetIn);
     addPropertyTo(obj, "get", arrayGet);
     addPropertyTo(obj, "delete", without);
+    addPropertyTo(obj, "mergeDeep", mergeDeep);
 
     return makeImmutable(obj, mutatingObjectMethods);
   }
 
-  function Immutable(obj, options) {
-    obj = obj || {};
+  function Immutable(obj, shallow) {
     if (isImmutable(obj)) {
       return obj;
     } else if (obj instanceof Array) {
@@ -502,7 +516,7 @@
       return makeImmutableDate(new Date(obj.getTime()));
     } else {
       // Don't freeze the object we were given; make a clone and use that.
-      var prototype = options && options.prototype;
+      var prototype = Map.prototype;
       var instantiateEmptyObject =
         (!prototype || prototype === Object.prototype) ?
           instantiatePlainObject : (function() { return Object.create(prototype); });
@@ -510,13 +524,19 @@
 
       for (var key in obj) {
         if (Object.getOwnPropertyDescriptor(obj, key)) {
-          clone[key] = Immutable(obj[key]);
+          clone[key] = obj[key];
+          if (!shallow) clone[key] = Immutable(clone[key]);
         }
       }
 
       return makeImmutableObject(clone,
         {instantiateEmptyObject: instantiateEmptyObject});
     }
+  }
+
+  function Map(obj) {
+    obj = obj || {};
+    return Immutable(obj, true);
   }
 
   // Export the library
@@ -527,8 +547,7 @@
 
   var Immutable_ = {
     fromJS: Immutable,
-    Map: Immutable,
-    List: Immutable_,
+    Map: Map,
     Iterable: { isIterable: isImmutable },
     isImmutable: isImmutable,
   };
