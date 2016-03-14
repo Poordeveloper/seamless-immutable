@@ -83,7 +83,7 @@
       }
 
       // Freeze it and return it.
-      Object.freeze(obj);
+      if (process.env.NODE_ENV !== 'production') Object.freeze(obj);
     }
 
     return obj;
@@ -103,7 +103,7 @@
     }
 
     var mutable = asMutableArray.call(this);
-    mutable[idx] = Immutable(value);
+    mutable[idx] = value;
     return makeImmutableArray(mutable);
   }
 
@@ -135,6 +135,20 @@
       return makeImmutableArray(mutable);
     }
   }
+  
+  function arrayGetIn(pth) {
+    var out = this;
+    for (var i = 0; i < pth.length; ++i) {
+      out = out[pth[i]];
+      if (!out) return null;
+    }
+
+    return out;
+  }
+
+  function arrayGet(key) {
+    return this[key];
+  }
 
   function makeImmutableArray(array) {
     // Don't change their implementations, but wrap these functions to make sure
@@ -151,6 +165,9 @@
     addPropertyTo(array, "asMutable", asMutableArray);
     addPropertyTo(array, "set", arraySet);
     addPropertyTo(array, "setIn", arraySetIn);
+    addPropertyTo(array, "toJS", asMutableArray);
+    addPropertyTo(array, "getIn", arrayGetIn);
+    addPropertyTo(array, "get", arrayGet);
 
     for(var i = 0, length = array.length; i < length; i++) {
       array[i] = Immutable(array[i]);
@@ -426,7 +443,7 @@
     }
 
     var mutable = quickCopy(this, this.instantiateEmptyObject());
-    mutable[property] = Immutable(value);
+    mutable[property] = value;
     return makeImmutableObject(mutable, this);
   }
 
@@ -467,11 +484,16 @@
     addPropertyTo(obj, "instantiateEmptyObject", instantiateEmptyObject);
     addPropertyTo(obj, "set", objectSet);
     addPropertyTo(obj, "setIn", objectSetIn);
+    addPropertyTo(obj, "toJS", asMutableObject);
+    addPropertyTo(obj, "getIn", arrayGetIn);
+    addPropertyTo(obj, "get", arrayGet);
+    addPropertyTo(obj, "delete", without);
 
     return makeImmutable(obj, mutatingObjectMethods);
   }
 
   function Immutable(obj, options) {
+    obj = obj || {};
     if (isImmutable(obj)) {
       return obj;
     } else if (obj instanceof Array) {
@@ -503,14 +525,22 @@
 
   Object.freeze(Immutable);
 
+  var Immutable_ = {
+    fromJS: Immutable,
+    Map: Immutable,
+    List: Immutable_,
+    Iterable: { isIterable: isImmutable },
+    isImmutable: isImmutable,
+  };
+
   /* istanbul ignore if */
   if (typeof module === "object") {
-    module.exports = Immutable;
+    module.exports = Immutable_;
   } else if (typeof exports === "object") {
-    exports.Immutable = Immutable;
+    exports.Immutable = Immutable_;
   } else if (typeof window === "object") {
-    window.Immutable = Immutable;
+    window.Immutable = Immutable_;
   } else if (typeof global === "object") {
-    global.Immutable = Immutable;
+    global.Immutable = Immutable_;
   }
 })();
