@@ -172,7 +172,7 @@
     addPropertyTo(array, "asMutable", asMutableArray);
     addPropertyTo(array, "set", arraySet);
     addPropertyTo(array, "setIn", arraySetIn);
-    addPropertyTo(array, "toJS", asMutableArray);
+    addPropertyTo(array, "toJson", asMutableArray);
     addPropertyTo(array, "getIn", arrayGetIn);
     addPropertyTo(array, "get", arrayGet);
 
@@ -498,7 +498,7 @@
     addPropertyTo(obj, "instantiateEmptyObject", instantiateEmptyObject);
     addPropertyTo(obj, "set", objectSet);
     addPropertyTo(obj, "setIn", objectSetIn);
-    addPropertyTo(obj, "toJS", asMutableObject);
+    addPropertyTo(obj, "toJson", asMutableObject);
     addPropertyTo(obj, "getIn", arrayGetIn);
     addPropertyTo(obj, "get", arrayGet);
     addPropertyTo(obj, "delete", without);
