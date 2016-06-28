@@ -1,12 +1,6 @@
 (function() {
   "use strict";
-  var isEqual;
-
-  if (process.env.NODE_ENV !== "production") {
-    isEqual = require('underscore').isEqual;
-  } else {
-    isEqual = (window._ || window.AV._).isEqual;
-  }
+  var isEqual = require('lodash.isequal');
 
   function addPropertyTo(target, methodName, value) {
     Object.defineProperty(target, methodName, {
